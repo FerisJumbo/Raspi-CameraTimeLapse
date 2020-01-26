@@ -8,7 +8,7 @@ camera = PiCamera()
 class Vars:
     framesDirectory = '/home/pi/Desktop/TimeLapse/Frames'
     currentFrame = 1
-    frameSpeed = 5 #Default
+    frameSpeed = 24 #Default
     
     previewEnabled = False #Default
     previewAlpha = 200 #Default
