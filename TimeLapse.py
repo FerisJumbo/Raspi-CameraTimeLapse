@@ -6,12 +6,16 @@ from tqdm import tqdm
 camera = PiCamera()
 
 class Vars:
-    framesDirectory = '/home/pi/Desktop/TimeLapse/Frames'
+    framesDirectory = '/home/pi/Desktop/Raspi-CameraTimeLapse-master/Frames'
     currentFrame = 1
-    frameSpeed = 24 #Default
+    frameSpeed = 5 #Default
     
-    previewEnabled = False #Default
-    previewAlpha = 200 #Default
+    currentRotation = 0
+    rotatingAngles = [0, 90, 180, 270]
+    
+    imageEffect = 'none'
+    imageEffects = []
+    
     resBottomPX = 1920
     resHeightPX = 1080
     
@@ -36,45 +40,61 @@ class Settings:
         
     @staticmethod
     def changePreviewWindow():
-        system('clear')
+        system('clear')        
         
-        print("Preview Enabled | %s" % (vars.previewEnabled))
-        boolean = raw_input('[T/F]> ')
-        if boolean == 'T' or boolean == 't':
-            vars.previewEnabled = True
-        elif boolean == 'F' or boolean == 'f':
-            vars.previewEnabled = False
-        system('clear')
+        print('Press Enter to end Preview')
+        sleep(3)
+        camera.start_preview()
+        raw_input('> ')
         
-        print("Preview Alpha Level | %s" % (vars.previewAlpha))
-        vars.previewAlpha = int(raw_input('[0-255]> '))
-        system('clear')
+        camera.stop_preview()
         
-        print("Current Resolution | %d x %d" % (vars.resBottomPX, vars.resHeightPX))
-        vars.resBottomPX = int(raw_input('{Bottom PX}> '))
-        vars.resHeightPX = int(raw_input('{Height PX}> '))
+        settings.settingsMenu()
+    
+    @staticmethod
+    def rotateImage():
         system('clear')
+        print('Current Rotation : %d' % (vars.currentRotation))
+        for i in range(len(vars.rotatingAngles)):
+            print('[%d] : %d Degrees' % (i + 1, vars.rotatingAngles[i]))
+        nav = int(raw_input('> '))
+        vars.currentRotation = vars.rotatingAngles[nav - 1]
+        settings.settingsMenu()
         
+    @staticmethod
+    def changeImageEffect():
+        system("clear")
+        print("Current Effect : " + vars.imageEffect)
+        for i in range(len(vars.imageEffects)):
+            print("[%d] : %s" % (i + 1, vars.imageEffects[i]))
+        nav = int(raw_input('> '))
+        vars.imageEffect = vars.imageEffects[nav - 1]
         settings.settingsMenu()
         
     @staticmethod
     def settingsMenu():
+        camera.resolution = (vars.resBottomPX, vars.resHeightPX)
+        camera.rotation = vars.currentRotation
+        camera.image_effect = vars.imageEffect
         system('clear')
         print("Settings")
-        print("--------")
+        print("\n--------")
         print("""
-Preview Enabled    | %s
-Preview Alpha      | %s
-Preview Resolution | %s x %s
+Resolution         | %s x %s
+Rotation           | %d Degrees
+Image Effect       | %s
 Frame Speed        | %d
 Frame Directory    | %s
-""" % (vars.previewEnabled, vars.previewAlpha, vars.resBottomPX, vars.resHeightPX, vars.frameSpeed, vars.framesDirectory))
+""" % (vars.resBottomPX, vars.resHeightPX, vars.currentRotation, vars.imageEffect, vars.frameSpeed, vars.framesDirectory))
         print("--------")
         print("""
 [1] : Change Frame Speed
 [2] : Change Frame Directory
-[3] : Preview Window
-[4] : Return to Main Menu
+[3] : Change Image Effect
+[4] : Rotate Image
+[5] : Preview Window
+
+[6] : Return to Main Menu
 """)
         nav = int(raw_input("> "))
         if nav == 1:
@@ -82,9 +102,15 @@ Frame Directory    | %s
         elif nav == 2:
             settings.changeFramesDirectory()
         elif nav == 3:
-            settings.changePreviewWindow()
+            settings.changeImageEffect()
         elif nav == 4:
+            settings.rotateImage()
+        elif nav == 5:
+            settings.changePreviewWindow()
+        elif nav == 6:
             Main()
+        else:
+            settings.settingsMenu()
             
 settings = Settings
     
@@ -96,32 +122,46 @@ def takePhoto():
 def startProgram():
     system('clear')
     camera.resolution = (vars.resBottomPX, vars.resHeightPX)
-    if vars.previewEnabled:
-        camera.start_preview(vars.previewAlpha)
+    camera.rotation = vars.currentRotation
+    camera.image_effect = vars.imageEffect
     
-    while True:
+    try:
+        while True:
+            system('clear')
+            print("Ctrl + C to quit")
+            print("Taking Frame : " + str(vars.currentFrame))
+            for i in tqdm(range(vars.frameSpeed)):
+                sleep(1)
+            takePhoto()
+    except:
         system('clear')
-        print("Ctrl + C to quit")
-        print("Taking Frame : " + str(vars.currentFrame))
-        for i in tqdm(range(vars.frameSpeed)):
-            sleep(1)
-        takePhoto()
+        print("Taken %d frames" % (vars.currentFrame - 1))
+        vars.currentFrame = 1
+        sleep(2)
+        Main()
 
 def Main():
     system('clear')
-    print("--Time Lapse Module--")
-    print("V1.0\n")
+    print("--/Time Lapse Module\--")
+    print("     __/V1.1\\__\n")
     print("---------------------")
     print("""
 [1] : Settings
 [2] : Start Program
+
+[3] : Exit
 """)
     nav = int(raw_input("> "))
     if nav == 1:
         settings.settingsMenu()
     elif nav == 2:
         startProgram()
+    elif nav == 3:
+        system('clear')
     else:
         Main()
         
+
+for i in camera.IMAGE_EFFECTS:
+    vars.imageEffects.append(i)
 Main()
