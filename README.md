@@ -1,4 +1,4 @@
-# Raspi-CameraTimeLapse
+# Raspi-CameraTimeLapse - I am an idiot and my name is cole gartner
 The camera time lapse module that I have made utilizes many functions of the raspi camera, and takes multiple pictures (specifically frames) that using basic windows 10 photos you can turn into a time lapse.  This module features many settings options for ease of use.
 ### Set-up
 ##### !Important! make sure that you enable camera in >Raspberry Pi Configuration>Interfaces
